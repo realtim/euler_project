@@ -3,42 +3,51 @@
 
 import itertools
 
-# find largest pandigital number
-
 # definition taken from wikipedia
-# check all numbers up to the square root of n
+# check numbers up to the square root of n
+# (checking only primes is enough actually but we don't have a list of primes)
 def isPrime(n):
-	for x in xrange(2,int(n**0.5) + 1):
-		if n % x == 0:
-			return False
-			
-	return True	
+    if n % 2 == 0:
+        return False
 
-# generate a pan digital number given the number of digits 
-def gen_pandigital(max_digits):
-	# list of digits
-	digits = [x for x in xrange(1, max_digits + 1)]
-	# list of corresponding powers of ten
-	powers_of_ten = [10**y for y in xrange(max_digits - 1, -1, -1)]
-	# make a list of tuple with all possible arrangements of digits
-	list_of_unique_digits = [x for x in itertools.permutations(digits)]
-	# turns a list of tuples into a list of lists
-	list_of_unique_digits = map(list,list_of_unique_digits)
-	numbers = [list_of_unique_digits[i][x]*powers_of_ten[x] for i in xrange(len(list_of_unique_digits)) for x in xrange(0,max_digits)]
-	super_final = []
-	
-	for x in xrange(0, len(numbers), max_digits):
-		super_final.append(sum(numbers[x:x+max_digits]))
-	
-	prime_and_pandig = filter(isPrime, super_final)
-	return prime_and_pandig
+    # Reduce number of iterations by skipping even numbers (they are nonprime anyway)
+    for x in xrange(3,int(n**0.5) + 1, 2):
+        if n % x == 0:
+            return False
 
-# start from 9 and work your way down
-for x in xrange(9,1,-1):
-	answers = gen_pandigital(x)
-	# take the last element of the first non-empty list and break. Hammertime!
-	if answers:
-		print "the greatest pandigital prime number is:", answers[-1]
-		break
-	else:
-		pass
+    return True	
+
+# find the greatest pandigital prime number
+def greatest_pandigital_prime_number():
+    powers_of_ten = [ 10**n for n in xrange(0,9) ]
+    last_digits_of_a_nonprime = set([0,2,4,5,6,8])
+
+    # iterate pandigital numbers from long to short, from big to small, return first prime number
+    for max_digits in xrange(9,1,-1):
+
+        # iterator of biggest pandigital number of max_digits digits
+        biggest_number_iterator = xrange(max_digits, 0, -1)
+
+        # divisible by 3 (nonprime)
+        # https://en.wikipedia.org/wiki/Divisibility_rule#Divisibility_by_3_or_9
+        if sum(biggest_number_iterator) % 3 == 0:
+            continue
+
+        # iterate permutations of digits from biggest to smallest
+        for digits_tuple in itertools.permutations(biggest_number_iterator):
+
+            # divisible by 2 or 5 (nonprime)
+            # https://en.wikipedia.org/wiki/Divisibility_rule#Divisibility_by_2
+            # https://en.wikipedia.org/wiki/Divisibility_rule#Divisibility_by_5
+            if digits_tuple[-1] in last_digits_of_a_nonprime:
+                continue
+
+            # generate number from digits
+            number = 0
+            for i, x in enumerate(digits_tuple):
+                number += powers_of_ten[max_digits-i-1]*x
+
+            if isPrime(number):
+                return number
+
+print "the greatest pandigital prime number is: ", greatest_pandigital_prime_number()
